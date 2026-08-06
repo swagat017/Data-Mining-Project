@@ -1,9 +1,11 @@
-
 .virtual_documents
 .ipynb_checkpoints
 
 # ignore datasets
 data/raw/
 data/interim/
-data/processes/
+data/processed/
+
+# ignore reference papers
+reports/
 
