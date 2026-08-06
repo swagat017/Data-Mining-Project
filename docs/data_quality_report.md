@@ -3,8 +3,8 @@
 ## Dataset
 - **Source:** UCI Machine Learning Repository — Online Retail (Chen, 2015), DOI: 10.24432/C5BW33
 - **File:** `data/raw/Online Retail.xlsx`
-- **SHA-256:** _fill in from your Stage 1 checksum output_
-- **Download date:** _fill in_
+- **SHA-256:** 541,909 rows, 15 columns
+- **Download date:** 8/6/026
 - **License:** CC BY 4.0
 
 ## Stage 0: Raw snapshot (before any cleaning)
@@ -35,11 +35,11 @@ Captured from `df_raw`, prior to any row deletion or transformation.
 - `CustomerID` nulls (135,080) will exclude those rows from any customer-level analysis (RFM, segmentation, prediction) but they remain valid for product-level and country-level analyses (e.g. OLAP `FactSales`).
 - Exact duplicate rows (5,268) — decision on handling still pending (see "Open decisions" below).
 
-## Open decisions (to be resolved and logged before Stage 1 cleaning)
+## Open decisions (resolved)
 
-- [ ] Duplicate-row rule: keep as legitimate repeat line items vs. drop as data-entry duplicates.
-- [ ] Rule for non-positive-quantity rows not flagged as cancellations (the 1,336-row gap).
-- [ ] Confirm RFM reference date for baseline reproduction (Section 17.1).
+- [x] **Duplicate-row rule:** Drop exact duplicates (5,268 rows), treated as data-entry error.
+- [x] **Non-cancellation, non-positive-quantity rows (1,336):** Confirmed as internal stock adjustments, not customer transactions or returns — 100% have `UnitPrice == 0` and `CustomerID` null, with descriptions like "Damaged", "check", "sold as set", or missing. Routed to a separate `stock_adjustment_lines` table (not `cancellation_lines`, not `valid_purchase_lines`). Since `CustomerID` is null for all of them, they were already excluded from `valid_purchase_lines` by the known-customer filter — this table exists for anomaly-analysis documentation, not to change the valid-lines count.
+- [ ] Confirm RFM reference date for baseline reproduction (Section 17.1). — _still pending_
 
 ## Stage 1: Profiled table (`df_profiled`)
 
@@ -49,3 +49,12 @@ Same row count as raw (541,909 rows, 15 columns after adding flags). No rows del
 |---|---|
 | `IsValidPurchaseLine` = True | 397,884 |
 | `IsValidPurchaseLine` = False | 144,025 |
+
+## Stage 2: Branched tables (after dedup)
+
+| Table | Rows | Purpose |
+|---|---|---|
+| `df_deduped` | 536,641 | Full deduplicated reference (536,641 = 541,909 − 5,268 duplicates) |
+| `valid_purchase_lines` | 349,203 | UK, known customer, positive qty/price, non-cancellation — RFM/clustering/prediction base |
+| `cancellation_lines` | 9,251 | Cancellation-flagged rows (deduped) — anomaly analysis |
+| `stock_adjustment_lines` | 1,336 | Internal write-offs, no customer — anomaly analysis (documented, not merged elsewhere) |
