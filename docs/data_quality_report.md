@@ -58,3 +58,7 @@ Same row count as raw (541,909 rows, 15 columns after adding flags). No rows del
 | `valid_purchase_lines` | 349,203 | UK, known customer, positive qty/price, non-cancellation — RFM/clustering/prediction base |
 | `cancellation_lines` | 9,251 | Cancellation-flagged rows (deduped) — anomaly analysis |
 | `stock_adjustment_lines` | 1,336 | Internal write-offs, no customer — anomaly analysis (documented, not merged elsewhere) |
+
+## Additional Processed Table: all_countries_valid_purchase_lines
+
+Same validity rules as `valid_purchase_lines` (known customer, positive qty/price, non-cancellation, deduplicated) but without the UK-only restriction. Created specifically to support the OLAP module's country-level breakdowns (Section 16), since `valid_purchase_lines` is intentionally UK-only to match the Chen et al. baseline reproduction scope.
